@@ -87,6 +87,8 @@ pub struct Registers {
 
     /// General purpose registers (V0, V1, ..., VF)
     v: [u8; 16],
+    /// 16-bit general purpose register
+    i: u16,
     /// Delay Timer Register
     delay_timer: u8,
     /// Sound Timer Register
@@ -99,6 +101,7 @@ impl Registers {
             sp: 0,
             stack: [0; 16],
             v: [0; 16],
+            i: 0,
             delay_timer: 0,
             sound_timer: 0
         }
