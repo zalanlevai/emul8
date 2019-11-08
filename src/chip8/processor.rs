@@ -16,10 +16,10 @@ impl Processor {
         }
     }
 
-    fn execute_from(system: &mut Chip8, instruction: u16) {
-        Processor::execute(system, Opcode::from(instruction));
+    fn execute_from(system: &mut Chip8, instruction: u16) -> Result<(), ProcessorError> {
+        Processor::execute(system, Opcode::from(instruction))
     }
-    fn execute(system: &mut Chip8, operation: Opcode) {
+    fn execute(system: &mut Chip8, operation: Opcode) -> Result<(), ProcessorError> {
         system.processor.operation = operation;
 
         println!("Stepping into opcode: {:?}", system.processor.operation);
@@ -64,15 +64,15 @@ impl Processor {
         }
 
         system.processor.registers.pc += 2;
+
+        Ok(())
     }
 }
 impl Processor {
     pub fn cycle(system: &mut Chip8) -> Result<(), ProcessorError> {
         println!("{:#X}", system.memory.read_16(system.processor.registers.pc)?);
 
-        Processor::execute_from(system, system.memory.read_16(system.processor.registers.pc)?);
-
-        Ok(())
+        Processor::execute_from(system, system.memory.read_16(system.processor.registers.pc)?)
     }
 }
 
@@ -111,11 +111,16 @@ impl Registers {
 pub enum ProcessorError {
     InvalidOpcodeError
 }
+// TODO: Better error handling
 impl From<MemoryError> for ProcessorError {
     fn from(err: MemoryError) -> Self {
         match err {
-            // TODO: Better error handling
             MemoryAccessError => InvalidOpcodeError
         }
+    }
+}
+impl From<TryFromSliceError> for ProcessorError {
+    fn from(_: TryFromSliceError) -> Self {
+        InvalidOpcodeError
     }
 }
