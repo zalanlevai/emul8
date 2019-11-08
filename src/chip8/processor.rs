@@ -106,6 +106,29 @@ impl Registers {
             sound_timer: 0
         }
     }
+
+    pub fn read_v(&self, i: u8) -> u8 {
+        self.v[i as usize]
+    }
+    pub fn write_v(&mut self, i: u8, val: u8) {
+        self.v[i as usize] = val;
+    }
+
+    pub fn peek_stack(&self) -> u16 {
+        self.stack[self.sp as usize]
+    }
+    pub fn pop_stack(&mut self) -> u16 {
+        self.pc = self.peek_stack();
+        self.sp -= 1;
+        self.pc
+    }
+    pub fn push_pc_stack(&mut self) {
+        self.push_stack(self.pc);
+    }
+    pub fn push_stack(&mut self, addr: u16) {
+        self.sp += 1;
+        self.stack[self.sp as usize] = addr;
+    }
 }
 
 pub enum ProcessorError {
