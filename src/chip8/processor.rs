@@ -1,5 +1,4 @@
 use crate::chip8::{Chip8, Opcode};
-use crate::chip8::opcode::Opcode::*;
 use crate::chip8::memory::MemoryError;
 use crate::chip8::memory::MemoryError::*;
 use crate::chip8::processor::ProcessorError::*;
@@ -24,46 +23,134 @@ impl Processor {
 
         println!("Stepping into opcode: {:?}", system.processor.operation);
 
+        let mut dont_step = false;
+
         match system.processor.operation {
-            _0nnn { n } => { panic!(); },
-            _00E0 => { },
-            _00EE => { },
-            _1nnn { n } => { },
-            _2nnn { n } => { },
-            _3xkk { x, k } => { },
-            _4xkk { x, k } => { },
-            _5xy0 { x, y } => { },
-            _6xkk { x, k } => { },
-            _7xkk { x, k } => { },
-            _8xy0 { x, y } => { },
-            _8xy1 { x, y } => { },
-            _8xy2 { x, y } => { },
-            _8xy3 { x, y } => { },
-            _8xy4 { x, y } => { },
-            _8xy5 { x, y } => { },
-            _8xy6 { x, y } => { },
-            _8xy7 { x, y } => { },
-            _8xyE { x, y } => { },
-            _9xy0 { x, y } => { },
-            _Annn { n } => { },
-            _Bnnn { n } => { },
-            _Cxkk { x, k } => { },
-            _Dxyn { x, y, n } => { },
-            _Ex9E { x } => { },
-            _ExA1 { x } => { },
-            _Fx07 { x } => { },
-            _Fx0A { x } => { },
-            _Fx15 { x } => { },
-            _Fx18 { x } => { },
-            _Fx1E { x } => { },
-            _Fx29 { x } => { },
-            _Fx33 { x } => { },
-            _Fx55 { x } => { },
-            _Fx65 { x } => { },
-            INVALID { code } => { }
+            Opcode::_0nnn { n } => { panic!(); },
+            Opcode::_00E0 => { },
+            Opcode::_00EE => {
+                system.processor.registers.pop_stack();
+            },
+            Opcode::_1nnn { n } => {
+                system.processor.registers.pc = n;
+                dont_step = true;
+            },
+            Opcode::_2nnn { n } => {
+                system.processor.registers.push_pc_stack();
+                system.processor.registers.pc = n;
+                dont_step = true;
+            },
+            Opcode::_3xkk { x, k } => {
+                if system.processor.registers.read_v(x) == k {
+                    system.processor.registers.pc += 2;
+                }
+            },
+            Opcode::_4xkk { x, k } => {
+                if system.processor.registers.read_v(x) != k {
+                    system.processor.registers.pc += 2;
+                }
+            },
+            Opcode::_5xy0 { x, y } => {
+                if system.processor.registers.read_v(x) == system.processor.registers.read_v(y) {
+                    system.processor.registers.pc += 2;
+                }
+            },
+            Opcode::_6xkk { x, k } => {
+                system.processor.registers.write_v(x, k);
+            },
+            Opcode::_7xkk { x, k } => {
+                let vx = system.processor.registers.read_v(x);
+                let (val, _) = vx.overflowing_add(k);
+                system.processor.registers.write_v(x, val);
+            },
+            Opcode::_8xy0 { x, y } => {
+                system.processor.registers.write_v(x, system.processor.registers.read_v(y));
+            },
+            Opcode::_8xy1 { x, y } => {
+                let (vx, vy) = (system.processor.registers.read_v(x), system.processor.registers.read_v(y));
+                system.processor.registers.write_v(x, vx | vy);
+            },
+            Opcode::_8xy2 { x, y } => {
+                let (vx, vy) = (system.processor.registers.read_v(x), system.processor.registers.read_v(y));
+                system.processor.registers.write_v(x, vx & vy);
+            },
+            Opcode::_8xy3 { x, y } => {
+                let (vx, vy) = (system.processor.registers.read_v(x), system.processor.registers.read_v(y));
+                system.processor.registers.write_v(x, vx ^ vy);
+            },
+            Opcode::_8xy4 { x, y } => {
+                let (vx, vy) = (system.processor.registers.read_v(x), system.processor.registers.read_v(y));
+                let (val, carry) = vx.overflowing_add(vy);
+                system.processor.registers.write_v(x, val);
+                system.processor.registers.write_v(0xF, carry as u8);
+            },
+            Opcode::_8xy5 { x, y } => {
+                let (vx, vy) = (system.processor.registers.read_v(x), system.processor.registers.read_v(y));
+                let (val, borrow) = vx.overflowing_sub(vy);
+                system.processor.registers.write_v(x, val);
+                system.processor.registers.write_v(0xF, (!borrow) as u8);
+            },
+            Opcode::_8xy6 { x, y: _ } => {
+                let vx = system.processor.registers.read_v(x);
+                system.processor.registers.write_v(0xF, vx & 0x1);
+                system.processor.registers.write_v(x, vx >> 1);
+            },
+            Opcode::_8xy7 { x, y } => {
+                let (vx, vy) = (system.processor.registers.read_v(x), system.processor.registers.read_v(y));
+                let (val, borrow) = vy.overflowing_sub(vx);
+                system.processor.registers.write_v(x, val);
+                system.processor.registers.write_v(0xF, (!borrow) as u8);
+            },
+            Opcode::_8xyE { x, y } => {
+                let vx = system.processor.registers.read_v(x);
+                system.processor.registers.write_v(0xF, vx >> 0x7);
+                system.processor.registers.write_v(x, vx << 1);
+            },
+            Opcode::_9xy0 { x, y } => {
+                if system.processor.registers.read_v(x) != system.processor.registers.read_v(y) {
+                    system.processor.registers.pc += 2;
+                }
+            },
+            Opcode::_Annn { n } => {
+                system.processor.registers.i = n;
+            },
+            Opcode::_Bnnn { n } => {
+                system.processor.registers.pc = n + system.processor.registers.read_v(0x0) as u16;
+                dont_step = true;
+            },
+            Opcode::_Cxkk { x, k } => { },
+            Opcode::_Dxyn { x, y, n } => { },
+            Opcode::_Ex9E { x } => { },
+            Opcode::_ExA1 { x } => { },
+            Opcode::_Fx07 { x } => {
+                system.processor.registers.write_v(x, system.processor.registers.delay_timer);
+            },
+            Opcode::_Fx0A { x } => { },
+            Opcode::_Fx15 { x } => {
+                system.processor.registers.delay_timer = system.processor.registers.read_v(x);
+            },
+            Opcode::_Fx18 { x } => {
+                system.processor.registers.sound_timer = system.processor.registers.read_v(x);
+            },
+            Opcode::_Fx1E { x } => {
+                system.processor.registers.i += system.processor.registers.read_v(x) as u16;
+            },
+            Opcode::_Fx29 { x } => {
+                system.processor.registers.i = 0x50 + (system.processor.registers.read_v(x) as u16) * 0x5;
+            },
+            Opcode::_Fx33 { x } => { },
+            Opcode::_Fx55 { x } => {
+                system.memory.copy(system.processor.registers.i, &system.processor.registers.v);
+            },
+            Opcode::_Fx65 { x } => {
+                system.processor.registers.v = <[u8; 16]>::try_from(system.memory.read_many(system.processor.registers.i, 0xF))?;
+            },
+            Opcode::INVALID { code } => { return Err(ProcessorError::InvalidOpcodeError); }
         }
 
-        system.processor.registers.pc += 2;
+        if !dont_step {
+            system.processor.registers.pc += 2;
+        }
 
         Ok(())
     }
