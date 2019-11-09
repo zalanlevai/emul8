@@ -4,6 +4,7 @@ use crate::chip8::memory::MemoryError::*;
 use crate::chip8::processor::ProcessorError::*;
 use std::convert::TryFrom;
 use std::array::TryFromSliceError;
+use std::fmt::Write;
 
 pub struct Processor {
     operation: Opcode,
@@ -163,6 +164,12 @@ impl Processor {
 
         Processor::execute_from(system, system.memory.read_16(system.processor.registers.pc)?)
     }
+
+    pub fn halt(system: &Chip8) {
+        println!("CPU halted!\n");
+        println!("{}", system.processor.registers.dump());
+        println!("{}", system.memory.dump());
+    }
 }
 
 pub struct Registers {
@@ -217,6 +224,35 @@ impl Registers {
     pub fn push_stack(&mut self, addr: u16) {
         self.sp += 1;
         self.stack[self.sp as usize] = addr;
+    }
+
+    pub fn dump(&self) -> String {
+        let mut writer = String::new();
+
+        // Program Counter
+        writeln!(writer, "{:<4}{:#X}", "PC", self.pc);
+
+        // Stack info
+        writeln!(writer, "{:<4}{:#X}", "SP",  self.sp);
+        writeln!(writer, "stack:");
+        for (i, addr) in self.stack.iter().rev().enumerate() {
+            writeln!(writer, "  {} {:#06X}",
+                     if self.sp == (0xF - i as u8) { ">" } else { " " }, addr);
+        }
+        writeln!(writer, "");
+
+        // Registers
+        writeln!(writer, "registers:");
+        for (i, row) in self.v.chunks(2).enumerate() {
+            writeln!(writer, "{:<4}{:<#8X}{:<4}{:#X}",
+                     format!("V{:X}", i*2), row[0],
+                     format!("V{:X}", i*2+1), row[1]);
+        }
+        writeln!(writer, "{:<4}{:#X}", "I",  self.i);
+        writeln!(writer, "{:<4}{:#X}", "DT", self.delay_timer);
+        writeln!(writer, "{:<4}{:#X}", "ST", self.sound_timer);
+
+        writer
     }
 }
 

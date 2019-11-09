@@ -1,6 +1,7 @@
 use crate::chip8::memory::MemoryError::*;
 use std::convert::TryFrom;
 use std::array::TryFromSliceError;
+use std::fmt::Write;
 
 pub struct Memory {
     /// The raw data that makes up the system memory.
@@ -38,6 +39,34 @@ impl Memory {
         for (i, mem) in val.iter().enumerate() {
             self.data[addr as usize + i] = *mem;
         }
+    }
+
+    pub fn dump(&self) -> String {
+        let mut writer = String::new();
+        writeln!(writer, "Length: {0} (0x{0:x}) bytes", self.data.len());
+
+        for (i, row) in self.data.chunks(0x10).enumerate() {
+            write!(writer, "{:04X}:  ", i * 0x10);
+
+            for (j, val) in row.iter().enumerate() {
+                write!(writer, "{:02X}{}", val, match j+1 {
+                    0x10 => "",
+                    _ => " "
+                });
+            }
+
+            write!(writer, " ");
+            for (j, val) in row.iter().enumerate() {
+                write!(writer, "{}", match char::from(*val) {
+                    c if c.is_control() => { '.' },
+                    c @ _ => { c }
+                });
+            }
+
+            writeln!(writer, "");
+        }
+
+        writer
     }
 }
 
