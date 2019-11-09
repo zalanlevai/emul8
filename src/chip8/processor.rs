@@ -2,6 +2,8 @@ use crate::chip8::{Chip8, Opcode};
 use crate::chip8::memory::MemoryError;
 use crate::chip8::memory::MemoryError::*;
 use crate::chip8::processor::ProcessorError::*;
+use std::convert::TryFrom;
+use std::array::TryFromSliceError;
 
 pub struct Processor {
     operation: Opcode,
