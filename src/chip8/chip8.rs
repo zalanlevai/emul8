@@ -17,4 +17,13 @@ impl Chip8 {
     pub fn init(&mut self) {
         self.bios.load(&mut self.memory);
     }
+
+    pub fn cycle(&mut self) {
+        println!("Entering processor cycle");
+        Processor::cycle(self).unwrap_or_else(|err| {
+            println!("\n===> ERROR: {:?}", err);
+            Processor::halt(self);
+            panic!();
+        });
+    }
 }
