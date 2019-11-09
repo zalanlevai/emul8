@@ -141,7 +141,7 @@ pub enum Opcode {
     /// Read registers V0 through V*x* from memory starting at location I.
     _Fx65 { x: u8 },
     /// Invalid opcode.
-    INVALID { code: u16 }
+    Invalid { code: u16 }
 }
 impl Opcode {
     pub fn from(instruction: u16) -> Opcode {
@@ -156,7 +156,7 @@ impl Opcode {
                 0x4000 => Opcode::_4xkk { x: ((instruction & 0x0F00) >> 8) as u8, k: (instruction & 0x00FF) as u8 },
                 0x5000 => match instruction & 0x000F {
                     0x0000 => Opcode::_5xy0 { x: ((instruction & 0x0F00) >> 8) as u8, y: ((instruction & 0x00F0) >> 4) as u8 },
-                    _ => Opcode::INVALID { code: instruction }
+                    _ => Opcode::Invalid { code: instruction }
                 },
                 0x6000 => Opcode::_6xkk { x: ((instruction & 0x0F00) >> 8) as u8, k: (instruction & 0x00FF) as u8 },
                 0x7000 => Opcode::_7xkk { x: ((instruction & 0x0F00) >> 8) as u8, k: (instruction & 0x00FF) as u8 },
@@ -170,11 +170,11 @@ impl Opcode {
                     0x0006 => Opcode::_8xy6 { x: ((instruction & 0x0F00) >> 8) as u8, y: ((instruction & 0x00F0) >> 4) as u8 },
                     0x0007 => Opcode::_8xy7 { x: ((instruction & 0x0F00) >> 8) as u8, y: ((instruction & 0x00F0) >> 4) as u8 },
                     0x000E => Opcode::_8xyE { x: ((instruction & 0x0F00) >> 8) as u8, y: ((instruction & 0x00F0) >> 4) as u8 },
-                    _ => Opcode::INVALID { code: instruction }
+                    _ => Opcode::Invalid { code: instruction }
                 },
                 0x9000 => match instruction & 0x000F {
                     0x0000 => Opcode::_9xy0 { x: ((instruction & 0x0F00) >> 8) as u8, y: ((instruction & 0x00F0) >> 4) as u8 },
-                    _ => Opcode::INVALID { code: instruction }
+                    _ => Opcode::Invalid { code: instruction }
                 },
                 0xA000 => Opcode::_Annn { n: instruction & 0x0FFF },
                 0xB000 => Opcode::_Bnnn { n: instruction & 0x0FFF },
@@ -183,7 +183,7 @@ impl Opcode {
                 0xE000 => match instruction & 0x00FF {
                     0x009E => Opcode::_Ex9E { x: ((instruction & 0x0F00) >> 8) as u8 },
                     0x00A1 => Opcode::_ExA1 { x: ((instruction & 0x0F00) >> 8) as u8 },
-                    _ => Opcode::INVALID { code: instruction }
+                    _ => Opcode::Invalid { code: instruction }
                 },
                 0xF000 => match instruction & 0x00FF {
                     0x0007 => Opcode::_Fx07 { x: ((instruction & 0x0F00) >> 8) as u8 },
@@ -195,9 +195,9 @@ impl Opcode {
                     0x0033 => Opcode::_Fx33 { x: ((instruction & 0x0F00) >> 8) as u8 },
                     0x0055 => Opcode::_Fx55 { x: ((instruction & 0x0F00) >> 8) as u8 },
                     0x0065 => Opcode::_Fx65 { x: ((instruction & 0x0F00) >> 8) as u8 },
-                    _ => Opcode::INVALID { code: instruction }
+                    _ => Opcode::Invalid { code: instruction }
                 },
-                _ => Opcode::INVALID { code: instruction }
+                _ => Opcode::Invalid { code: instruction }
             }
         }
     }

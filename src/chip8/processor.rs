@@ -13,7 +13,7 @@ pub struct Processor {
 impl Processor {
     pub fn new() -> Self {
         Self {
-            operation: Opcode::INVALID { code: 0x0000 },
+            operation: Opcode::Invalid { code: 0x0000 },
             registers: Registers::new()
         }
     }
@@ -148,7 +148,7 @@ impl Processor {
             Opcode::_Fx65 { x } => {
                 system.processor.registers.v = <[u8; 16]>::try_from(system.memory.read_many(system.processor.registers.i, 0xF))?;
             },
-            Opcode::INVALID { code } => { return Err(ProcessorError::InvalidOpcodeError); }
+            Opcode::Invalid { code } => { return Err(ProcessorError::InvalidOpcodeError); }
         }
 
         if !dont_step {
